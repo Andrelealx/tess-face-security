@@ -8,6 +8,9 @@ const {
   createProfile,
   deleteProfile,
   listDetections,
+  getDetectionStats,
+  getCategoryBreakdown,
+  getDetectionsTimeline,
 } = require("./services/profiles");
 const { identifyFace } = require("./services/recognition");
 const { tessAnalyze } = require("./services/tess");
@@ -102,6 +105,7 @@ app.post("/api/recognition/identify", async (req, res) => {
       embedding: req.body?.embedding,
       cameraLabel: req.body?.cameraLabel,
       threshold: req.body?.threshold,
+      metadata: req.body?.metadata,
     });
 
     return res.json(result);
@@ -114,6 +118,34 @@ app.get("/api/detections", async (req, res) => {
   try {
     const detections = await listDetections(req.query.limit);
     return res.json({ total: detections.length, detections });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/api/analytics/summary", async (_req, res) => {
+  try {
+    const [stats1h, stats24h, categoryBreakdown] = await Promise.all([
+      getDetectionStats(1),
+      getDetectionStats(24),
+      getCategoryBreakdown(24),
+    ]);
+
+    return res.json({
+      stats1h,
+      stats24h,
+      categoryBreakdown,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/api/analytics/timeline", async (req, res) => {
+  try {
+    const timeline = await getDetectionsTimeline(req.query.minutes, req.query.bucket);
+    return res.json(timeline);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

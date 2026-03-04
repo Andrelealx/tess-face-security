@@ -5,6 +5,7 @@ MVP de seguranca para eventos com:
 - reconhecimento facial assistido (webcam + `face-api.js` no navegador);
 - API Node.js + MySQL para cadastro de perfis e logs de deteccao;
 - IA operacional **TESS** usando OpenAI para analise de risco e recomendacoes.
+- HUD estilo \"jarvis\" com graficos em tempo real e auto-scan continuo.
 
 ## Importante (uso responsavel)
 
@@ -15,12 +16,23 @@ MVP de seguranca para eventos com:
 
 ## Arquitetura
 
-- `public/`: painel web (camera, cadastro, identificacao, TESS).
+- `public/`: painel web (HUD, camera, charts, cadastro, identificacao, TESS).
 - `src/server.js`: API HTTP + arquivos estaticos.
 - `src/services/recognition.js`: comparacao de embeddings faciais.
 - `src/services/tess.js`: integracao com OpenAI.
 - `src/services/profiles.js`: repositorio MySQL.
 - `src/db.js`: conexao e schema.
+
+## HUD em tempo real (v2)
+
+- Overlay visual sobre a camera com box da face detectada.
+- Auto-scan periodico para reconhecimento continuo.
+- Graficos operacionais:
+  - sinal facial e confianca;
+  - match vs sem match (janela 1h);
+  - timeline de deteccoes por bucket de tempo;
+  - distribuicao por categoria (staff/vip/blocked/guest/unknown).
+- Medidor de risco dinamico (LOW/MEDIUM/HIGH/CRITICAL).
 
 ## Como funciona o reconhecimento
 
@@ -81,6 +93,8 @@ npm start
 - `DELETE /api/profiles/:id`
 - `POST /api/recognition/identify`
 - `GET /api/detections`
+- `GET /api/analytics/summary`
+- `GET /api/analytics/timeline?minutes=90&bucket=3`
 - `POST /api/tess/analyze`
 
 ## Deploy no Railway
@@ -100,16 +114,13 @@ RECOGNITION_THRESHOLD=0.5
 5. Redeploy.
 6. Em `Networking`, gere dominio publico (`*.up.railway.app`).
 
-## Comandos Git (repo novo)
+## Comandos Git (atualizacao)
 
 ```bash
 cd "/Users/lealx/Documents/New project/tess-face-security"
-git init
 git add .
-git commit -m "feat: tess face security mvp"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/tess-face-security.git
-git push -u origin main
+git commit -m "feat: neural hud com graficos e auto-scan"
+git push
 ```
 
 ## Ideias para evolucao
@@ -120,4 +131,3 @@ git push -u origin main
 - modulo mobile para equipe de campo;
 - RBAC por perfil (operador/supervisor/admin);
 - criptografia de embeddings em repouso.
-# tess-face-security

@@ -25,9 +25,26 @@ function calculateConfidence(distance, threshold) {
   return Math.max(0, Math.min(1, Number(score.toFixed(4))));
 }
 
-async function identifyFace({ embedding, cameraLabel, threshold }) {
+function sanitizeMetadata(metadata) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {};
+  }
+
+  try {
+    const serialized = JSON.stringify(metadata);
+    if (serialized.length <= 4000) {
+      return JSON.parse(serialized);
+    }
+    return { warning: "metadata_truncated" };
+  } catch (_error) {
+    return {};
+  }
+}
+
+async function identifyFace({ embedding, cameraLabel, threshold, metadata }) {
   const probe = normalizeEmbedding(embedding);
   const recognitionThreshold = Number(threshold || process.env.RECOGNITION_THRESHOLD || 0.5);
+  const safeMetadata = sanitizeMetadata(metadata);
   const profiles = await listProfiles();
 
   const candidates = profiles.filter((profile) => profile.consent);
@@ -42,6 +59,7 @@ async function identifyFace({ embedding, cameraLabel, threshold }) {
         reason: "no_profiles",
         threshold: recognitionThreshold,
         probeLength: probe.length,
+        ...safeMetadata,
       },
     });
 
@@ -75,6 +93,7 @@ async function identifyFace({ embedding, cameraLabel, threshold }) {
       threshold: recognitionThreshold,
       probeLength: probe.length,
       candidateCount: candidates.length,
+      ...safeMetadata,
     },
   });
 

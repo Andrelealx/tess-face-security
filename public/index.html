@@ -3,74 +3,174 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TESS Face Security</title>
+    <title>TESS Neural HUD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div class="bg-grid" aria-hidden="true"></div>
     <main class="layout">
-      <header class="hero glass">
+      <header class="hero panel">
         <div>
-          <p class="eyebrow">SISTEMA OPERACIONAL</p>
-          <h1>TESS Face Security</h1>
+          <p class="eyebrow">TACTICAL EVENT SECURITY SUITE</p>
+          <h1>TESS Neural HUD</h1>
           <p class="subtitle">
-            Reconhecimento facial assistido para eventos, com validação humana e
-            análise em tempo real pela IA TESS.
+            Visao computacional assistida para controle de acesso e resposta operacional em eventos.
           </p>
         </div>
-        <div class="status-card" id="apiStatus">Carregando status...</div>
+        <div class="status-stack">
+          <div class="chip" id="apiStatus">Carregando status...</div>
+          <div class="chip" id="watchMode">Modo: manual</div>
+          <div class="chip" id="faceSignal">Sinal facial: --</div>
+        </div>
       </header>
 
-      <section class="grid">
-        <article class="panel glass">
-          <h2>Camera</h2>
-          <video id="video" autoplay muted playsinline></video>
-          <p class="hint" id="cameraHint">Clique em "Iniciar camera" para começar.</p>
-          <div class="actions">
-            <button id="startCameraBtn">Iniciar camera</button>
-            <button id="identifyBtn" class="secondary">Identificar agora</button>
+      <section class="row-vision">
+        <article class="panel vision-panel">
+          <div class="vision-head">
+            <h2>Visor Biometrico</h2>
+            <p class="hint" id="cameraHint">Inicie a camera para ativar o modo de analise.</p>
           </div>
-          <label class="field">
-            <span>Checkpoint / camera</span>
-            <input id="cameraLabel" type="text" value="entrada-principal" />
-          </label>
-          <div id="identifyResult" class="result-box"></div>
+
+          <div class="video-wrap">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div class="scanline" aria-hidden="true"></div>
+          </div>
+
+          <div class="actions">
+            <button id="startCameraBtn">Iniciar Camera</button>
+            <button id="identifyBtn" class="secondary">Identificar Agora</button>
+            <button id="autoScanBtn" class="secondary">Ativar Auto-Scan</button>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Checkpoint / camera</span>
+              <input id="cameraLabel" type="text" value="entrada-principal" />
+            </label>
+            <label class="field">
+              <span>Threshold reconhecimento</span>
+              <input id="thresholdInput" type="number" min="0.3" max="1" step="0.01" value="0.5" />
+            </label>
+          </div>
+
+          <pre id="identifyResult" class="result-box">Aguardando leitura...</pre>
         </article>
 
-        <article class="panel glass">
+        <article class="panel metrics-panel">
+          <h2>Risco em Tempo Real</h2>
+          <div class="risk-meter">
+            <div class="risk-fill" id="riskFill"></div>
+            <span id="riskLabel">LOW</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <p>Match (1h)</p>
+              <strong id="matchCounter">0</strong>
+            </div>
+            <div class="metric-card">
+              <p>Sem Match (1h)</p>
+              <strong id="unmatchedCounter">0</strong>
+            </div>
+            <div class="metric-card">
+              <p>Bloqueados (24h)</p>
+              <strong id="blockedCounter">0</strong>
+            </div>
+            <div class="metric-card">
+              <p>Deteccoes (24h)</p>
+              <strong id="totalCounter">0</strong>
+            </div>
+          </div>
+
+          <div class="live-log" id="liveLog">Sem eventos recentes.</div>
+        </article>
+      </section>
+
+      <section class="row-charts">
+        <article class="panel chart-panel">
+          <h3>Sinal e Confianca</h3>
+          <canvas id="confidenceChart"></canvas>
+        </article>
+
+        <article class="panel chart-panel">
+          <h3>Match Rate (1h)</h3>
+          <canvas id="matchChart"></canvas>
+        </article>
+
+        <article class="panel chart-panel full">
+          <h3>Timeline de Deteccoes</h3>
+          <canvas id="timelineChart"></canvas>
+        </article>
+
+        <article class="panel chart-panel full">
+          <h3>Distribuicao por Categoria (24h)</h3>
+          <canvas id="categoryChart"></canvas>
+        </article>
+      </section>
+
+      <section class="row-ops">
+        <article class="panel ops-panel">
           <h2>Cadastro de Perfis</h2>
-          <p class="hint">
-            Cadastre apenas perfis com base legal e consentimento documentado.
-          </p>
+          <p class="hint">Cadastre apenas com base legal e consentimento documentado.</p>
+
           <label class="field">
             <span>Nome</span>
             <input id="profileName" type="text" placeholder="Ex.: Andre Leal" />
           </label>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Categoria</span>
+              <select id="profileCategory">
+                <option value="staff">staff</option>
+                <option value="vip">vip</option>
+                <option value="blocked">blocked</option>
+                <option value="guest" selected>guest</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Atualizacao manual</span>
+              <button id="refreshBtn" class="secondary">Sincronizar Painel</button>
+            </label>
+          </div>
+
           <label class="field">
-            <span>Categoria</span>
-            <select id="profileCategory">
-              <option value="staff">staff</option>
-              <option value="vip">vip</option>
-              <option value="blocked">blocked</option>
-              <option value="guest" selected>guest</option>
-            </select>
+            <span>Observacao operacional</span>
+            <textarea id="profileNotes" rows="2"></textarea>
           </label>
-          <label class="field">
-            <span>Observacao (opcional)</span>
-            <textarea id="profileNotes" rows="2" placeholder="Informacao operacional"></textarea>
-          </label>
+
           <div class="actions">
-            <button id="enrollBtn">Capturar e cadastrar rosto</button>
-            <button id="refreshBtn" class="secondary">Atualizar dados</button>
+            <button id="enrollBtn">Capturar e Cadastrar</button>
           </div>
         </article>
 
-        <article class="panel glass full">
+        <article class="panel ops-panel">
+          <h2>TESS IA Operacional</h2>
+          <p class="hint">Pergunte para TESS sobre risco, resposta e prevenção.</p>
+          <label class="field">
+            <span>Pergunta</span>
+            <textarea
+              id="tessQuestion"
+              rows="4"
+              placeholder="Ex.: Tive 2 detecções de bloqueados em 15 minutos. Qual protocolo agora?"
+            ></textarea>
+          </label>
+          <div class="actions">
+            <button id="askTessBtn">Analisar com TESS</button>
+          </div>
+          <pre id="tessAnswer" class="answer-box">Aguardando comando...</pre>
+        </article>
+      </section>
+
+      <section class="row-tables">
+        <article class="panel table-panel">
           <h2>Perfis Cadastrados</h2>
           <div class="table-wrap">
             <table>
@@ -89,7 +189,7 @@
           </div>
         </article>
 
-        <article class="panel glass full">
+        <article class="panel table-panel">
           <h2>Deteccoes Recentes</h2>
           <div class="table-wrap">
             <table>
@@ -108,27 +208,11 @@
             </table>
           </div>
         </article>
-
-        <article class="panel glass full">
-          <h2>TESS IA Operacional</h2>
-          <p class="hint">Use a TESS para interpretar risco, priorizar ação e orientar a equipe.</p>
-          <label class="field">
-            <span>Pergunta para TESS</span>
-            <textarea
-              id="tessQuestion"
-              rows="3"
-              placeholder="Ex.: Tivemos 3 deteccoes de perfil bloqueado na ultima hora. Qual protocolo imediato devo aplicar?"
-            ></textarea>
-          </label>
-          <div class="actions">
-            <button id="askTessBtn">Perguntar para TESS</button>
-          </div>
-          <pre id="tessAnswer" class="answer-box">Aguardando pergunta...</pre>
-        </article>
       </section>
     </main>
 
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script defer src="/app.js"></script>
   </body>
 </html>

@@ -201,6 +201,119 @@ async function getDetectionStats(hours = 24) {
   };
 }
 
+async function getCategoryBreakdown(hours = 24) {
+  const safeHours = Math.max(1, Math.min(Number(hours) || 24, 168));
+  const [rows] = await pool.query(
+    `
+      SELECT
+        COALESCE(p.category, 'unknown') AS category,
+        COUNT(*) AS total,
+        SUM(CASE WHEN d.matched = 1 THEN 1 ELSE 0 END) AS matched
+      FROM detections d
+      LEFT JOIN profiles p ON p.id = d.profile_id
+      WHERE d.created_at >= DATE_SUB(NOW(), INTERVAL ? HOUR)
+      GROUP BY COALESCE(p.category, 'unknown')
+      ORDER BY total DESC
+    `,
+    [safeHours],
+  );
+
+  const categories = {
+    staff: 0,
+    vip: 0,
+    blocked: 0,
+    guest: 0,
+    unknown: 0,
+  };
+
+  for (const row of rows) {
+    const category = String(row.category || "unknown");
+    if (!Object.hasOwn(categories, category)) {
+      categories.unknown += Number(row.total || 0);
+      continue;
+    }
+    categories[category] = Number(row.total || 0);
+  }
+
+  return {
+    windowHours: safeHours,
+    categories,
+    rows: rows.map((row) => ({
+      category: String(row.category || "unknown"),
+      total: Number(row.total || 0),
+      matched: Number(row.matched || 0),
+    })),
+  };
+}
+
+async function getDetectionsTimeline(minutes = 90, bucketMinutes = 3) {
+  const safeMinutes = Math.max(5, Math.min(Number(minutes) || 90, 12 * 60));
+  const safeBucketMinutes = Math.max(1, Math.min(Number(bucketMinutes) || 3, 30));
+  const bucketSeconds = safeBucketMinutes * 60;
+  const bucketMs = bucketSeconds * 1000;
+
+  const [rows] = await pool.query(
+    `
+      SELECT
+        FROM_UNIXTIME(
+          FLOOR(UNIX_TIMESTAMP(d.created_at) / ?) * ?
+        ) AS bucket_start,
+        COUNT(*) AS total,
+        SUM(CASE WHEN d.matched = 1 THEN 1 ELSE 0 END) AS matched,
+        SUM(CASE WHEN d.matched = 0 THEN 1 ELSE 0 END) AS unmatched
+      FROM detections d
+      WHERE d.created_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)
+      GROUP BY bucket_start
+      ORDER BY bucket_start ASC
+    `,
+    [bucketSeconds, bucketSeconds, safeMinutes],
+  );
+
+  const pointsByMs = new Map();
+  for (const row of rows) {
+    const bucketStart = new Date(row.bucket_start).getTime();
+    const key = Math.floor(bucketStart / bucketMs) * bucketMs;
+    pointsByMs.set(key, {
+      bucketStart: new Date(key).toISOString(),
+      label: new Date(key).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      total: Number(row.total || 0),
+      matched: Number(row.matched || 0),
+      unmatched: Number(row.unmatched || 0),
+    });
+  }
+
+  const points = [];
+  const alignedNow = Math.floor(Date.now() / bucketMs) * bucketMs;
+  const totalBuckets = Math.max(1, Math.ceil(safeMinutes / safeBucketMinutes));
+  const start = alignedNow - (totalBuckets - 1) * bucketMs;
+
+  for (let i = 0; i < totalBuckets; i += 1) {
+    const bucketStart = start + i * bucketMs;
+    const existing = pointsByMs.get(bucketStart);
+    points.push(
+      existing || {
+        bucketStart: new Date(bucketStart).toISOString(),
+        label: new Date(bucketStart).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        total: 0,
+        matched: 0,
+        unmatched: 0,
+      },
+    );
+  }
+
+  return {
+    windowMinutes: safeMinutes,
+    bucketMinutes: safeBucketMinutes,
+    points,
+  };
+}
+
 module.exports = {
   normalizeEmbedding,
   listProfiles,
@@ -209,4 +322,6 @@ module.exports = {
   registerDetection,
   listDetections,
   getDetectionStats,
+  getCategoryBreakdown,
+  getDetectionsTimeline,
 };
