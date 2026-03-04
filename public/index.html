@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TESS Face Security</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero glass">
+        <div>
+          <p class="eyebrow">SISTEMA OPERACIONAL</p>
+          <h1>TESS Face Security</h1>
+          <p class="subtitle">
+            Reconhecimento facial assistido para eventos, com validação humana e
+            análise em tempo real pela IA TESS.
+          </p>
+        </div>
+        <div class="status-card" id="apiStatus">Carregando status...</div>
+      </header>
+
+      <section class="grid">
+        <article class="panel glass">
+          <h2>Camera</h2>
+          <video id="video" autoplay muted playsinline></video>
+          <p class="hint" id="cameraHint">Clique em "Iniciar camera" para começar.</p>
+          <div class="actions">
+            <button id="startCameraBtn">Iniciar camera</button>
+            <button id="identifyBtn" class="secondary">Identificar agora</button>
+          </div>
+          <label class="field">
+            <span>Checkpoint / camera</span>
+            <input id="cameraLabel" type="text" value="entrada-principal" />
+          </label>
+          <div id="identifyResult" class="result-box"></div>
+        </article>
+
+        <article class="panel glass">
+          <h2>Cadastro de Perfis</h2>
+          <p class="hint">
+            Cadastre apenas perfis com base legal e consentimento documentado.
+          </p>
+          <label class="field">
+            <span>Nome</span>
+            <input id="profileName" type="text" placeholder="Ex.: Andre Leal" />
+          </label>
+          <label class="field">
+            <span>Categoria</span>
+            <select id="profileCategory">
+              <option value="staff">staff</option>
+              <option value="vip">vip</option>
+              <option value="blocked">blocked</option>
+              <option value="guest" selected>guest</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Observacao (opcional)</span>
+            <textarea id="profileNotes" rows="2" placeholder="Informacao operacional"></textarea>
+          </label>
+          <div class="actions">
+            <button id="enrollBtn">Capturar e cadastrar rosto</button>
+            <button id="refreshBtn" class="secondary">Atualizar dados</button>
+          </div>
+        </article>
+
+        <article class="panel glass full">
+          <h2>Perfis Cadastrados</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th>Consent.</th>
+                  <th>Criado</th>
+                  <th>Acoes</th>
+                </tr>
+              </thead>
+              <tbody id="profilesTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel glass full">
+          <h2>Deteccoes Recentes</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Perfil</th>
+                  <th>Categoria</th>
+                  <th>Camera</th>
+                  <th>Match</th>
+                  <th>Confianca</th>
+                  <th>Horario</th>
+                </tr>
+              </thead>
+              <tbody id="detectionsTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel glass full">
+          <h2>TESS IA Operacional</h2>
+          <p class="hint">Use a TESS para interpretar risco, priorizar ação e orientar a equipe.</p>
+          <label class="field">
+            <span>Pergunta para TESS</span>
+            <textarea
+              id="tessQuestion"
+              rows="3"
+              placeholder="Ex.: Tivemos 3 deteccoes de perfil bloqueado na ultima hora. Qual protocolo imediato devo aplicar?"
+            ></textarea>
+          </label>
+          <div class="actions">
+            <button id="askTessBtn">Perguntar para TESS</button>
+          </div>
+          <pre id="tessAnswer" class="answer-box">Aguardando pergunta...</pre>
+        </article>
+      </section>
+    </main>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="/app.js"></script>
+  </body>
+</html>

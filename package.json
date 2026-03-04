@@ -1,0 +1,19 @@
+{
+  "name": "tess-face-security",
+  "version": "1.0.0",
+  "description": "Sistema de seguranca para eventos com reconhecimento facial e assistente TESS",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.14.5",
+    "openai": "^5.20.1"
+  }
+}
