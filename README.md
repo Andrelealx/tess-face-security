@@ -120,3 +120,4 @@ git push -u origin main
 - modulo mobile para equipe de campo;
 - RBAC por perfil (operador/supervisor/admin);
 - criptografia de embeddings em repouso.
+# tess-face-security
